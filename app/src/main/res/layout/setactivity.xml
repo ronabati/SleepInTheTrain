@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:paddingTop="10dp"
+        android:paddingLeft="10dp"
+        android:textSize="15sp"
+        android:id="@+id/testview1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Alarm distance setting"/>
+
+
+    <SeekBar
+        android:layout_below="@+id/testview1"
+        android:paddingTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/seekBar"
+        android:layout_weight="1"
+        android:max="350"
+        android:progress="100"/>
+    <TextView
+        android:paddingTop="10dp"
+        android:paddingLeft="10dp"
+        android:layout_below="@+id/seekBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv1"
+        />
+    <TextView
+        android:paddingTop="10dp"
+        android:paddingLeft="10dp"
+        android:layout_below="@+id/tv1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv2"
+        />
+    <Button
+        android:layout_below="@+id/tv2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/alarmaction"
+        android:text="Alarm action setting"/>
+
+    <Button
+        android:layout_below="@+id/alarmaction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:id="@+id/ringtone"
+        android:text="Ringtone check"/>
+
+
+</RelativeLayout>
+
