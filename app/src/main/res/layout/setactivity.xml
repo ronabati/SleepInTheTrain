@@ -10,7 +10,7 @@
         android:id="@+id/testview1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Alarm distance setting"/>
+        android:text="Alarm radius setting(meters)"/>
 
 
     <SeekBar
@@ -20,12 +20,21 @@
         android:layout_height="wrap_content"
         android:id="@+id/seekBar"
         android:layout_weight="1"
-        android:max="350"
-        android:progress="100"/>
+        android:max="2000"
+        android:progress="1000"/>
     <TextView
         android:paddingTop="10dp"
         android:paddingLeft="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/default_radius"
         android:layout_below="@+id/seekBar"
+        android:text="The default alarm radius is :1000 meters"
+        />
+    <TextView
+        android:paddingTop="10dp"
+        android:paddingLeft="10dp"
+        android:layout_below="@+id/default_radius"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/tv1"
@@ -52,6 +61,13 @@
         android:layout_marginTop="20dp"
         android:id="@+id/ringtone"
         android:text="Ringtone check"/>
+
+
+
+
+
+
+
 
 
 </RelativeLayout>

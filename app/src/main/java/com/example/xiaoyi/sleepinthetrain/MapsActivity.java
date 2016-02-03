@@ -1,8 +1,11 @@
 package com.example.xiaoyi.sleepinthetrain;
 
 import android.Manifest;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -10,11 +13,8 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,7 +24,6 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.Places;
@@ -37,6 +36,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,GoogleMap.OnMapLongClickListener,LocationListener,GoogleApiClient.ConnectionCallbacks ,
@@ -49,25 +49,27 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
     public static Circle circle;
     public static Location location;
     public static final String TAG = "MapFragment";
-    private LocationRequest mLocationRequest = null;
-    private Location mCurrentLocation = null;
-    private String seachText = null;
-    private static final int MY_PERMISSION_ACCESS_COARSE_LOCATION = 11;
-    private static final int MY_PERMISSION_ACCESS_FINE_LOCATION = 12;
-
-    private static final int MINIMUM_TIME = 10000;
-    private static final int MINIMUM_DISTANCE = 50;
-
-    private String mProviderName;
-    private LocationManager mlocationManager;
-    private LocationListener mLocationListener;
-    private static final int REQUEST_CODE_LOCATION = 2;
+    public double lat;
+    public double log;
+//    private LocationRequest mLocationRequest = null;
+//    private Location mCurrentLocation = null;
+//    private String seachText = null;
+//    private static final int MY_PERMISSION_ACCESS_COARSE_LOCATION = 11;
+//    private static final int MY_PERMISSION_ACCESS_FINE_LOCATION = 12;
+//
+//    private static final int MINIMUM_TIME = 10000;
+//    private static final int MINIMUM_DISTANCE = 50;
+//
+//    private String mProviderName;
+//    private LocationManager mlocationManager;
+//    private LocationListener mLocationListener;
+//    private static final int REQUEST_CODE_LOCATION = 2;
     private ArcMenu mArcMenu;
     protected GoogleApiClient myGoogleApiClient;
-    private EditText mAutocompleteView;
-    private RecyclerView myRecyclerView;
-    private LinearLayoutManager myLinearLayoutManager;
-    private PlacesAutoCompleteAdapter mAutoCompleteAdapter;
+//    private EditText mAutocompleteView;
+//    private RecyclerView myRecyclerView;
+//    private LinearLayoutManager myLinearLayoutManager;
+//    private PlacesAutoCompleteAdapter mAutoCompleteAdapter;
 
     private TextView mTxtMapPlace;
 
@@ -81,7 +83,22 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
     };
 
     LatLng current_location = null;
-    LocationManager locationManager = null;
+
+
+    private static final long MINIMUM_DISTANCECHANGE_FOR_UPDATE = 1; // in Meters
+    private static final long MINIMUM_TIME_BETWEEN_UPDATE = 1000; // in Milliseconds
+    public long POINT_RADIUS = 1000; // in Meters
+    private static final long PROX_ALERT_EXPIRATION = -1; // It will never expire
+    private static final String PROX_ALERT_INTENT = "com.example.xiaoyi.sleepinthetrain";
+
+    private LocationManager locationManager;
+    private TextView latitudeEditText;
+    private TextView longitudeEditText;
+    private Marker currentLocationMarker;
+
+    private static final int NOTIFICATION_ID = 1000;
+
+
 
 
 
@@ -109,13 +126,37 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
             }
         });
 
-        mlocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//        latitudeEditText = (TextView) findViewById(R.id.point_latitude);
+//        longitudeEditText = (TextView) findViewById(R.id.point_longitude);
+
+
+
+//        mlocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
         
         initEvent();
+
+        Intent intent = getIntent();
+        Bundle bundle = intent.getExtras();
+
+//        if (bundle.get("POINT_RADIUS_CHANGED") != 1000){
+        if (bundle!=null) {
+             POINT_RADIUS = (long) bundle.get("POINT_RADIUS_CHANGED");
+            Toast.makeText(MapsActivity.this, "You have change your alarm radius to:"+ bundle.get("POINT_RADIUS_CHANGED")+"meters", Toast.LENGTH_LONG).show();
+
+        }
+
+
+//        }
+
+
+
+
+
+
 
 //        mAutocompleteView =(EditText) findViewById(R.id.place_autocomplete);
 //        mAutoCompleteAdapter =  new PlacesAutoCompleteAdapter(this, R.layout.search_row,
@@ -183,11 +224,22 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
             public void onClick(View view, int pos) {
                 switch (pos) {
                     case 1:
-                    Intent intent = new Intent(MapsActivity.this,SettingActivity.class);
-                    startActivity(intent);
+                        Intent intent = new Intent(MapsActivity.this, SettingActivity.class);
+                        startActivity(intent);
                         break;
                     case 2:
                         openAutocompleteActivity();
+                        break;
+                    case 3:
+                            addProximityAlert();
+
+
+                        break;
+                    case 4:
+                        cancelProximityAlert();
+                        break;
+
+
 
                 }
 
@@ -238,11 +290,11 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
             if (current_location != null) {
 
 
-//         Add a marker in Sydney and move the camera
-                LatLng sydney = new LatLng(-33.8674870, 151.2069900);
-                mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(-33.8674870, 151.2069900), 18));
+//         Add a marker when you long click and move the camera
+                mMap.setOnMapLongClickListener(this);
+
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(current_location));
+
             }
         }
         mMap.setMyLocationEnabled(true);
@@ -349,12 +401,28 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
                 // Get the user's selected place from the Intent.
                 Place place = PlaceAutocomplete.getPlace(this, data);
                 Log.i(TAG, "Place Selected: " + place.getName());
+                Toast.makeText(MapsActivity.this, "Please Long click the marker to select your destination:", Toast.LENGTH_LONG).show();
+                markLocation(place.getLatLng(), (String) place.getAddress());
 
 
-                mMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("Marker in" + place.getAddress()));
+
+
+
+                //    mMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("Your Destination:" + place.getAddress()));
+
+
+
+
+
+                lat = place.getLatLng().latitude;
+                log = place.getLatLng().longitude;
+
+
 
                 CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLng(place.getLatLng());
                 mMap.animateCamera(cameraUpdate);
+
+
 
                 // Format the place's details and display them in the TextView.
 //                mPlaceDetailsText.setText(formatPlaceDetails(getResources(), place.getName(),
@@ -362,7 +430,7 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
 //                        place.getWebsiteUri()));
 
                 // Display attributions if required.
-                CharSequence attributions = place.getAttributions();
+//                CharSequence attributions = place.getAttributions();
 //                if (!TextUtils.isEmpty(attributions)) {
 //                    mPlaceAttribution.setText(Html.fromHtml(attributions.toString()));
 //                } else {
@@ -377,5 +445,73 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
             }
         }
     }
+
+
+
+    private void addProximityAlert() {
+        double latitude = lat;
+        double longitude = log;
+
+
+        requestPermissions(LOCATION_PERMS, 100);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.VIBRATE) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.VIBRATE) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+
+
+
+        Intent intent = new Intent(PROX_ALERT_INTENT);
+        PendingIntent proximityIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+        locationManager.addProximityAlert(
+                latitude, // the latitude of the central point of the alert region
+                longitude, // the longitude of the central point of the alert region
+                POINT_RADIUS, // the radius of the central point of the alert region, in meters
+                PROX_ALERT_EXPIRATION, // time for this proximity alert, in milliseconds, or -1 to indicate no                           expiration
+                proximityIntent // will be used to generate an Intent to fire when entry to or exit from the alert region is detected
+        );
+
+        IntentFilter filter = new IntentFilter(PROX_ALERT_INTENT);
+        registerReceiver(new ProximityIntentReceiver(), filter);
+
+        if (latitude == 0.0) {
+
+
+            Toast.makeText(getApplicationContext(), "You need a Destination", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            Toast.makeText(MapsActivity.this, "Alert Added and Current alarm radius is:"+POINT_RADIUS+"meters", Toast.LENGTH_SHORT).show();
+
+        }
+    }
+
+    public void cancelProximityAlert(){
+
+        NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(NOTIFICATION_ID);
+    }
+
+    public void markLocation(LatLng position, String positionAdd){
+        if(currentLocationMarker!=null){
+            currentLocationMarker.remove();
+        }
+        currentLocationMarker = mMap.addMarker(new MarkerOptions().position(position).title("Your Destination:" + positionAdd));
+
+
+
+
+    }
+
+
+
+
+
+
 }
 
