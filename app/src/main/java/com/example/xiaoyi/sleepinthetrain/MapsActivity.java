@@ -51,6 +51,7 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
     public static final String TAG = "MapFragment";
     public double lat;
     public double log;
+    private Bundle mExtras;
 //    private LocationRequest mLocationRequest = null;
 //    private Location mCurrentLocation = null;
 //    private String seachText = null;
@@ -65,6 +66,7 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
 //    private LocationListener mLocationListener;
 //    private static final int REQUEST_CODE_LOCATION = 2;
     private ArcMenu mArcMenu;
+
     protected GoogleApiClient myGoogleApiClient;
 //    private EditText mAutocompleteView;
 //    private RecyclerView myRecyclerView;
@@ -87,7 +89,7 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
 
     private static final long MINIMUM_DISTANCECHANGE_FOR_UPDATE = 1; // in Meters
     private static final long MINIMUM_TIME_BETWEEN_UPDATE = 1000; // in Milliseconds
-    public long POINT_RADIUS = 1000; // in Meters
+    private int POINT_RADIUS = 1000 ; // in Meters
     private static final long PROX_ALERT_EXPIRATION = -1; // It will never expire
     private static final String PROX_ALERT_INTENT = "com.example.xiaoyi.sleepinthetrain";
 
@@ -117,7 +119,6 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
         buildGoogleApiClient();
         setContentView(R.layout.activity_maps);
         mArcMenu = (ArcMenu)findViewById(R.id.id_menu);
-
         mTxtMapPlace = (TextView) findViewById(R.id.tv_placing);
         mTxtMapPlace.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -138,16 +139,9 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
 
         
         initEvent();
+       // setradius();
 
-        Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
 
-//        if (bundle.get("POINT_RADIUS_CHANGED") != 1000){
-        if (bundle!=null) {
-             POINT_RADIUS = (long) bundle.get("POINT_RADIUS_CHANGED");
-            Toast.makeText(MapsActivity.this, "You have change your alarm radius to:"+ bundle.get("POINT_RADIUS_CHANGED")+"meters", Toast.LENGTH_LONG).show();
-
-        }
 
 
 //        }
@@ -217,6 +211,20 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
 
     }
 
+  //  private void setradius() {
+
+//        Intent intent = getIntent();
+//        Bundle bundle = intent.getExtras();
+//
+////        if (bundle.get("POINT_RADIUS_CHANGED") != 1000){
+//        if (bundle != null)
+//
+//            POINT_RADIUS =(long)bundle.get("POINT_RADIUS_CHANGED");
+//            Toast.makeText(MapsActivity.this, "You have change your alarm radius to:"+ bundle.get("POINT_RADIUS_CHANGED")+"meters", Toast.LENGTH_LONG).show();
+
+
+   // }
+
     //click method
     private void initEvent() {
         mArcMenu.setOnMenuItemClickListener(new ArcMenu.OnMenuItemClickListener() {
@@ -231,14 +239,11 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
                         openAutocompleteActivity();
                         break;
                     case 3:
-                            addProximityAlert();
-
-
+                        addProximityAlert();
                         break;
                     case 4:
                         cancelProximityAlert();
                         break;
-
 
 
                 }
@@ -467,26 +472,66 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
 
 
 
-        Intent intent = new Intent(PROX_ALERT_INTENT);
-        PendingIntent proximityIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
-        locationManager.addProximityAlert(
-                latitude, // the latitude of the central point of the alert region
-                longitude, // the longitude of the central point of the alert region
-                POINT_RADIUS, // the radius of the central point of the alert region, in meters
-                PROX_ALERT_EXPIRATION, // time for this proximity alert, in milliseconds, or -1 to indicate no                           expiration
-                proximityIntent // will be used to generate an Intent to fire when entry to or exit from the alert region is detected
-        );
 
-        IntentFilter filter = new IntentFilter(PROX_ALERT_INTENT);
-        registerReceiver(new ProximityIntentReceiver(), filter);
+        Intent intent = getIntent();
+        Bundle bundle = intent.getExtras();
 
-        if (latitude == 0.0) {
+        if (bundle !=null && bundle.get("POINT_RADIUS_CHANGED")!= null ){
+
+            POINT_RADIUS = (int) bundle.get("POINT_RADIUS_CHANGED");
+            Toast.makeText(MapsActivity.this, "You have change your alarm radius to:" + bundle.get("POINT_RADIUS_CHANGED") + "meters", Toast.LENGTH_LONG).show();
 
 
-            Toast.makeText(getApplicationContext(), "You need a Destination", Toast.LENGTH_SHORT).show();
+            Intent intent1 = new Intent(PROX_ALERT_INTENT);
+            PendingIntent proximityIntent = PendingIntent.getBroadcast(this, 0, intent1, 0);
+            locationManager.addProximityAlert(
+                    latitude, // the latitude of the central point of the alert region
+                    longitude, // the longitude of the central point of the alert region
+                    POINT_RADIUS, // the radius of the central point of the alert region, in meters
+                    PROX_ALERT_EXPIRATION, // time for this proximity alert, in milliseconds, or -1 to indicate no                           expiration
+                    proximityIntent // will be used to generate an Intent to fire when entry to or exit from the alert region is detected
+            );
+
+            IntentFilter filter = new IntentFilter(PROX_ALERT_INTENT);
+            registerReceiver(new ProximityIntentReceiver(), filter);
+
+            if (latitude == 0.0) {
+
+
+                Toast.makeText(getApplicationContext(), "You need a Destination", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(MapsActivity.this, "Alert Added and Current alarm radius is:" + POINT_RADIUS + "meters", Toast.LENGTH_SHORT).show();
+
+            }
+
+
+
+
         }
         else {
-            Toast.makeText(MapsActivity.this, "Alert Added and Current alarm radius is:"+POINT_RADIUS+"meters", Toast.LENGTH_SHORT).show();
+                        Intent intent1 = new Intent(PROX_ALERT_INTENT);
+            PendingIntent proximityIntent = PendingIntent.getBroadcast(this, 0, intent1, 0);
+            locationManager.addProximityAlert(
+                    latitude, // the latitude of the central point of the alert region
+                    longitude, // the longitude of the central point of the alert region
+                    POINT_RADIUS, // the radius of the central point of the alert region, in meters
+                    PROX_ALERT_EXPIRATION, // time for this proximity alert, in milliseconds, or -1 to indicate no                           expiration
+                    proximityIntent // will be used to generate an Intent to fire when entry to or exit from the alert region is detected
+            );
+
+            IntentFilter filter = new IntentFilter(PROX_ALERT_INTENT);
+            registerReceiver(new ProximityIntentReceiver(), filter);
+
+            if (latitude == 0.0) {
+
+
+                Toast.makeText(getApplicationContext(), "You need a Destination", Toast.LENGTH_SHORT).show();
+            }
+            else {
+                Toast.makeText(MapsActivity.this, "Alert Added and Current alarm radius is:"+POINT_RADIUS+"meters", Toast.LENGTH_SHORT).show();
+
+            }
+
 
         }
     }
@@ -506,6 +551,13 @@ GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
 
 
 
+    }
+
+
+    public Bundle getExtras() {
+        return (mExtras != null)
+                ? new Bundle(mExtras)
+                : null;
     }
 
 

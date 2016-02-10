@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">SleepInTheTrain</string>
-    <string name="title_activity_maps">Map-new</string>
+    <string name="title_activity_maps">SleepInTheTrain</string>
     <string name="google_app_id">123456789012</string>
 </resources>
